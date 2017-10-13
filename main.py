@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ''' git@github.com:TheTitoPlay/mdlp-project.git |
     https://github.com/TheTitoPlay/mdlp-project.git'''
 
@@ -24,3 +25,26 @@ class UntitledGame:
                 if event.type == pygame.QUIT :
                     done = True
         pygame.quit()
+=======
+''' git@github.com:TheTitoPlay/mdlp-project.git '''
+
+import pygame
+
+pygame.init()
+
+# open new window
+window = pygame.display.set_mode((600, 420), pygame.DOUBLEBUF)
+pygame.display.set_caption('POP CULTURE VOL.1')
+pygame.display.set_icon(pygame.image.load('icon.png'))
+
+
+done = False
+while done == False:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT :
+            done = True
+    
+
+
+
+>>>>>>> 127db4b739cb76f7cfb64e04730c04b710c367a2
