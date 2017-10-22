@@ -6,6 +6,7 @@
 #https://github.com/TheTitoPlay/mdlp-project.git
 
 import pygame
+from run import *
 
 class UntitledGame:
 
@@ -19,16 +20,19 @@ class UntitledGame:
         #pygame.display.set_icon(pygame.image.load('icon.png'))
 
         ## create screen
-        self._screen = pygame.Surface(self._window.get_size(), pygame.SRCALPHA, 32)
+        self._screen = pygame.Surface((1000, 600), pygame.SRCALPHA, 32)
         self._screen = self._screen.convert()
         #self._bgcolor = (0, 191, 255)
         #self._screen.fill(self._bgcolor)
 
+        ## initialize
+        self._run = Run(self._screen.get_size())
+
         ## display/load menu
-        self._menu = pygame.image.load('resources\screen\menu.png').convert()
-        self._play = pygame.image.load('resources\screen\play.png').convert()
-        self._choose_player = pygame.image.load('resources\screen\choose_player.png').convert()
-        self._player_pick = pygame.image.load('resources\screen\player_pick.png').convert_alpha()
+        self._menu = pygame.image.load('resources/screen/menu.png').convert()
+        self._play = pygame.image.load('resources/screen/play.png').convert()
+        self._choose_player = pygame.image.load('resources/screen/choose_player.png').convert()
+        self._player_pick = pygame.image.load('resources/screen/player_pick.png').convert_alpha()
         self._screen.blit(self._menu, (0, 0))
 
         ## update screen        
@@ -97,7 +101,12 @@ class UntitledGame:
                         self.update_screen()
 
                     if event.key == pygame.K_RETURN and menu_screen == 12:
+                        menu_screen = 121
                         print("Jeu lancé avec perso choisi")
+
+                        ## Print Game
+                        self._screen.blit(self._run.make_bg(), (0, 0))
+                        self.update_screen()
                         
 
 
