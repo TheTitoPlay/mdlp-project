@@ -8,6 +8,7 @@
 import pygame
 from run import *
 from level_loader import *
+from player import *
 
 class UntitledGame:
 
@@ -29,6 +30,7 @@ class UntitledGame:
         ## initialize
         self._run = Run(self._screen.get_size())
         self._level_loader = LevelLoader()
+         
 
         ## display/load menu
         self._menu = pygame.image.load('resources/screen/menu.png').convert_alpha()
@@ -121,24 +123,32 @@ class UntitledGame:
 
                     if event.key == pygame.K_RETURN and menu_screen == 12:
                         if p_position == 0:
-                            player = "Adventurer"
+                            player_selected = "adventurer"
                         if p_position == 81:
-                            player = "Female"
+                            player_selected = "female"
                         if p_position == 162:
-                            player = "Male"
+                            player_selected = "male"
                         if p_position == 243:
-                            player = "Soldier"
+                            player_selected = "soldier"
                         if p_position == 324:
-                            player = "Zombie"
+                            player_selected = "zombie"
                             
-                        menu_screen = 121
-
+                        menu_screen = -1
+                        
+                        ## Initialize
+                        self._player = PlayerSprites(player_selected)
+                        
                         ## Print Game
                         file = "resources/levels/1.lvl"
                         start_level = self._level_loader.load(file)
-                        self._screen.blit(self._run.game(start_level, player), (0, 0))
+
+                        player = self._player.get_selected_player()
+                        start_pos = self._player.get_start_pos()
+                        
+                        self._screen.blit(self._run.game(start_level, player, start_pos), (0, 0))
                         self.update_screen()
 
+                    
                         
 
 
