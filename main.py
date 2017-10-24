@@ -184,7 +184,15 @@ class UntitledGame:
                             menu_screen = 0
                             self._screen.blit(self._menu, (0, 0))
                             self.update_screen()
-                            menu_screen = 0              
+                            menu_screen = 0
+
+                        if event.key == pygame.K_SPACE:
+                            self._player = self._player_right.get_selected_player()
+                            self._player_act = self._player_right.get_act("jump")
+                            self._player_pos = (self._player_pos[0], self._player_pos[1] - 128)
+
+                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
+                            self.update_screen()                            
 
                             
                     elif event.type == pygame.KEYUP:
@@ -206,7 +214,21 @@ class UntitledGame:
                             
                             self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
                             self.update_screen()
-                        
+                            
+                        elif event.key == pygame.K_SPACE:
+                            self._player = self._player_right.get_selected_player()
+                            self._player_act = self._player_right.get_act("stand")
+                            
+                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
+                            self.update_screen()
+
+                        elif event.key == pygame.K_DOWN:
+                            self._player = self._player_right.get_selected_player()
+                            self._player_act = self._player_right.get_act("stand")
+                            
+                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
+                            self.update_screen()
+                            
             if menu_screen == -1:                
                 ## Move Right in Game
                 keys = pygame.key.get_pressed()
@@ -227,13 +249,31 @@ class UntitledGame:
                     self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
                     self.update_screen()
 
-                ## Climb in Game
+                ## Back in Game
                 elif keys[pygame.K_UP]:
                     self._player = self._player_right.get_selected_player()
                     self._player_act = self._player_right.get_act("back")
                     
                     self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
                     self.update_screen()
+
+                ## Jump 2Case
+                '''elif keys[pygame.K_SPACE]:
+                    self._player = self._player_right.get_selected_player()
+                    self._player_act = self._player_right.get_act("jump")
+                    self._player_pos = (self._player_pos[0], self._player_pos[1] - 256)
+
+                    self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
+                    self.update_screen()'''
+                ## Duck
+                if keys[pygame.K_DOWN]:
+                    self._player = self._player_right.get_selected_player()
+                    self._player_act = self._player_right.get_act("duck")
+                    self._player_pos = (self._player_pos[0], self._player_pos[1] + 10)
+
+                    self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
+                    self.update_screen()
+            
                            
             ## Update screen
             self.update_screen()

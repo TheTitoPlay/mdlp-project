@@ -6,6 +6,7 @@
 #https://github.com/TheTitoPlay/mdlp-project.git
 
 import pygame
+from game_sprites import *
 
 
 
@@ -18,7 +19,9 @@ class Run:
         ##Load Ressources
         self._bg = pygame.image.load('resources/game_sprites/PNG/Backgrounds/colored_land.png').convert()
 
-        self._sprites = pygame.image.load('resources/game_sprites/Spritesheets/spritesheet_complete.png').convert_alpha()
+        #self._sprites = pygame.image.load('resources/game_sprites/Spritesheets/spritesheet_complete.png').convert_alpha()
+        self._game_sprites = GameSprites()
+        self._get_sprites = self._game_sprites.get_sprites()
         
         
     def level(self, level, player, player_act, player_pos):
@@ -33,17 +36,17 @@ class Run:
             X_case = 0
             for case in line:
                 if case == "X":
-                    run_surface.blit(self._sprites, (X_case, Y_case), (1690,390,BS,BS))
+                    run_surface.blit(self._get_sprites, (X_case, Y_case), self._game_sprites.get_resources('grassCenter'))
                 if case == "G":
-                    run_surface.blit(self._sprites, (X_case, Y_case), (1560,390,BS,BS))
+                    run_surface.blit(self._get_sprites, (X_case, Y_case), self._game_sprites.get_resources('grassMid'))
                 if case == "P":
                     run_surface.blit(player, (X_case + 24 + player_pos[0], Y_case + 18 + player_pos[1]), player_act)
                 if case == "L":
-                    run_surface.blit(self._sprites, (X_case, Y_case), (1560,1170,BS,BS))
+                    run_surface.blit(self._get_sprites, (X_case, Y_case), self._game_sprites.get_resources('grassHalf_left'))
                 if case == "M":
-                    run_surface.blit(self._sprites, (X_case, Y_case), (1560,1040,BS,BS))
+                    run_surface.blit(self._get_sprites, (X_case, Y_case), self._game_sprites.get_resources('grassHalf_mid'))
                 if case == "R":
-                    run_surface.blit(self._sprites, (X_case, Y_case), (1560,910,BS,BS))
+                    run_surface.blit(self._get_sprites, (X_case, Y_case), self._game_sprites.get_resources('grassHalf_right'))
 
                 X_case += BS
             Y_case += BS
