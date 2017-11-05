@@ -11,10 +11,13 @@ class PlayerSprites:
     def __init__(self, player, flip):
         ## Load corresponding resources
         if flip == 'right':
-            self._selected_player = pygame.image.load("resources\player\\"  + player + "_tilesheet.png")
+            self._selected_player = pygame.image.load("resources/player/"  + player + "_tilesheet.png")
         if flip == 'left':
-            self._selected_player = pygame.image.load("resources\player\\"  + player + "_tilesheet2.png")       
-
+            self._selected_player = pygame.image.load("resources/player/"  + player + "_tilesheet2.png")       
+        
+        ## Create Actions Lists
+        self._walk = [pygame.Rect(80,110,80,110), pygame.Rect(0,110,80,110)]
+        self._walks = 0
                 
     def get_selected_player(self):
         ## Return Current Image
@@ -72,3 +75,12 @@ class PlayerSprites:
             return pygame.Rect(0,110,80,110)
         if act == 'walk2':
             return pygame.Rect(80,110,80,110)
+        if act == 'walk':
+            if self._walks == 1:
+                self._walks = 0
+                return self._walk[self._walks]
+            
+            if self._walks == 0:
+                self._walks += 1
+                return self._walk[self._walks]
+            
