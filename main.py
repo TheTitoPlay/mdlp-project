@@ -6,334 +6,359 @@
 #https://github.com/TheTitoPlay/mdlp-project.git
 
 import pygame
-from run import *
+import os
 from player import *
-from level_loader import *
+from level import *
 from settings import *
+from sprites import *
+
 
 
 class UntitledGame:
 
     def __init__(self):
-        ## Initialize pygame and sound
+        # initialize game window, etc
         pygame.init()
         pygame.mixer.init()
-
-        ## Window parameters
-        self._window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.DOUBLEBUF)
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption(TITLE)
-        #pygame.display.set_icon(pygame.image.load('icon.png'))
+        self.clock = pygame.time.Clock()
+        self.running = True
+        self.load_resources()
 
-        ## Create screen
-        self._screen = pygame.Surface(self._window.get_size(), pygame.SRCALPHA, 32)
-        self._screen = self._screen.convert()
-        self._screen.fill(bgcolor)
+    def load_resources(self):
+        #menu
+        self.menu = pygame.image.load('resources/screen/menu.png').convert_alpha()
+        self.play = pygame.image.load('resources/screen/play.png').convert_alpha()
+        self.new_game = pygame.image.load('resources/screen/choose_player.png').convert_alpha()
+        self.player_pick = pygame.image.load('resources/screen/player_pick.png').convert_alpha()
+        self.continue_game = pygame.image.load('resources/screen/continue_game.png').convert_alpha()
+        #Game sprites
+        self.game_sprites = pygame.image.load('resources/game_sprites/Spritesheets/spritesheet_complete.png').convert_alpha()
+        self.data_player = 0
+        #HUD
+        #self.hud_head = pygame.image.load('resources/player/soldier/Limbs/head.png')
+        #self.hud_key = DynamicHud(self.game_sprites, 'hudKey_yellow_empty')
 
+    def create_new_game(self):
 
-        ## Initialize command to other files
-        self._level_loader = LevelLoader()
-        self._run = Run(self._screen.get_size())
+        self.save_name = str(input("Username (without > < / \ * \" ' : ? |): "))
 
-        # Create Clock to watch FPS
-        self._clock = pygame.time.Clock()
+        try:
+            with open("resources/saves/" + self.save_name + ".svg", 'x') as f:
+                #        line 1           line 2
+                f.write("player" + '\n' + str(self.data_player) + '\nlevel\n1')
+                self.tilesheet = PlayerSprites('resources/player/' + P_PICK[int(self.data_player)] + '_tilesheet.png')
+                self.level2load = "resources/levels/1.lvl"
+                self.level_loaded = "1"
+                self.saved_name = self.save_name
 
-        # Repeate Pressed Keybord Events
-        pygame.key.set_repeat(60, 0)
+        except:
+            print("Username already exists \(°O°*)/")
+            self.save_not_exist = str(input("Do you want to choose another: y/n "))
 
-        ## Display/Load menu
-        self._menu = pygame.image.load('resources/screen/menu.png').convert_alpha()
-        self._play = pygame.image.load('resources/screen/play.png').convert_alpha()
-        self._choose_player = pygame.image.load('resources/screen/choose_player.png').convert_alpha()
-        self._player_pick = pygame.image.load('resources/screen/player_pick.png').convert_alpha()
-        self._screen.blit(self._menu, (0, 0))
+            if self.save_not_exist == 'y':
+                self.create_new_game()
 
-        ## Update screen
-        self._window.blit(self._screen, (0, 0))
-        pygame.display.flip()
+            if self.save_not_exist == 'n':
+                self.menu_display('play')
+                self.waiting = False
 
-    def clear_menu(self):
-        ## Clear menu
-        self._screen.fill(bgcolor)
-        self.update_screen()
+    def load_game(self):
+        self.saved_name = str(input("Username: "))
+        try:
+            with open("resources/saves/" + self.saved_name + ".svg", 'r') as f:
+                self.save_list = []
+                for line in f:
+                    self.save_list.append(line)
 
-    def update_screen(self):
-        ## Update screen
-        self._window.blit(self._screen, (0, 0))
-        pygame.display.flip()
+                i = 0
+                for element in self.save_list:
+                    i +=1
+                    if element == 'player\n':
+                        self.data_player = self.save_list[i]
 
+                    if element == 'level\n':
+                        self.level_loaded = self.save_list[i]
+                        self.level2load = 'resources/levels/' + self.save_list[i] + '.lvl'
+            self.tilesheet = PlayerSprites('resources/player/' + P_PICK[int(self.data_player)] + '_tilesheet.png')
+
+        except:
+            print("Wrong username!")
+            self.save_not_exist = str(input("Do you want to try again: y/n "))
+
+            if self.save_not_exist == 'y':
+                self.load_game()
+
+            if self.save_not_exist == 'n':
+                self.menu_display('play')
+                self.waiting = False
+
+            else:
+                print("Error!")
+                self.load_game()
+
+    def save_game(self):
+        pass
+
+    def game(self):
+        # start the game
+        # load & build level
+        level = Level(self.level2load)
+        self.all_sprites = pygame.sprite.Group()
+        self.platforms = pygame.sprite.Group()
+        self.objects = pygame.sprite.Group()
+        #self.door = pygame.sprite.Group()
+        self.keys = pygame.sprite.Group()
+        self.player = Player(self, P_PICK[int(self.data_player)], level.get_player_start_pos())
+        self.all_sprites.add(self.player)
+
+        #hud
+        self.hud_head = pygame.image.load('resources/player/'+ P_PICK[int(self.data_player)] + '/Limbs/head.png')
+
+        # game init var
+        self.haveAkey = False
+
+        #Level sprites
+        for keys in level.level_env.keys():
+            for sprite in level.level_env[keys]:
+                if 'door' in keys:
+                    self.door = DynamicSprite(self.game_sprites, keys, sprite)
+                    #self.door.add(self.d)
+                    self.all_sprites.add(self.door)
+                elif 'key' in keys:
+                    k = Sprite(self.game_sprites, keys, sprite)
+                    self.hud_key = DynamicHud(self.game_sprites, 'hudKey_yellow_empty')
+                    self.keys.add(k)
+                    self.all_sprites.add(k)
+                else:
+                    p = Sprite(self.game_sprites, keys, sprite)
+                    self.platforms.add(p)
+                    self.all_sprites.add(p)
+
+        print("Level " + self.level_loaded + " loaded!")
+        print("May the force be with you " + self.saved_name + "!")
+        self.handler()
 
     def handler(self):
-        done = False
-        menu_screen = 0
-        while done == False:
+        # Game Loopload_res
+        self.playing = True
+        while self.playing:
+            self.clock.tick(FPS)
+            self.events()
+            self.update()
+            self.draw()
+
+    def update(self):
+        # Game Loop - Update
+        self.all_sprites.update()
+        # player hits platforms when falling
+        if self.player.vel.y > 0:
+            hits = pygame.sprite.spritecollide(self.player, self.platforms, False)
+            if hits:
+                if self.player.pos.y < hits[0].rect.bottom:
+                    self.player.pos.y = hits[0].rect.top + 1
+                    self.player.vel.y = 0
+                    self.player.jumping = False
+
+        #player hits platforms when jumping
+        if self.player.vel.y < 0:
+            hits = pygame.sprite.spritecollide(self.player, self.platforms, False)
+            if hits:
+                self.player.pos.y = hits[0].rect.bottom + 110
+                self.player.vel.y = -(self.player.vel.y)
+
+        # top scroll
+        if self.player.rect.top <= HEIGHT / 6:
+            self.player.pos.y += max(abs(self.player.vel.y), 5)
+            for plat in self.all_sprites:
+                plat.rect.y += max(abs(self.player.vel.y), 5)
+
+        # down scroll
+        if self.player.rect.bottom >= HEIGHT * (6 / 7):
+            self.player.pos.y -= max(abs(self.player.vel.y), 5)
+            for plat in self.all_sprites:
+                plat.rect.y -= max(abs(self.player.vel.y), 5)
+
+        # right scroll
+        if self.player.rect.right >= WIDTH * (5/8):
+            self.player.pos.x -= max(abs(self.player.vel.x), 5)
+            for plat in self.all_sprites:
+                plat.rect.x -= max(abs(self.player.vel.x), 5)
+
+        # left scroll
+        if self.player.rect.left <= WIDTH * (3/8):
+            self.player.pos.x += max(abs(self.player.vel.x), 5)
+            for plat in self.all_sprites:
+                plat.rect.x += max(abs(self.player.vel.x), 5)
+
+        # player grab key
+        hits = pygame.sprite.spritecollide(self.player, self.keys, True)
+        if hits:
+            self.haveAkey = True
+            self.hud_key.switch('hudKey_yellow')
+
+        # player in front of door
+        hits = pygame.sprite.collide_rect(self.player, self.door)
+        if hits and self.haveAkey:
+            self.door.switch('doorOpen_top')
+            self.haveAkey = False
+
+
+    def events(self):
+        # Game Loop - events
+        for event in pygame.event.get():
+            # check for closing window
+            if event.type == pygame.QUIT:
+                self.playing = False
+                self.running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    self.player.jump()
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    self.player.jump_break()
+
+    def draw(self):
+        # Game Loop - draw
+        self.screen.fill(bgcolor)
+        self.all_sprites.draw(self.screen)
+        # To be sure player always in front
+        self.screen.blit(self.player.image, self.player.rect)
+        # Display HUD
+        self.screen.blit(self.hud_head, (20,20))
+        #self.screen.blit(self.hud_key, (80,20))
+        #flip the display
+        pygame.display.flip()
+
+    def menu_display(self, d_screen):
+        if d_screen == 'menu':
+            self.screen.fill(bgcolor)
+            self.screen.blit(self.menu, (0, 0))
+            pygame.display.flip()
+            self.menu_state = d_screen
+            self.menu_handler()
+
+        if d_screen == 'play':
+            self.screen.fill(bgcolor)
+            self.screen.blit(self.play, (0, 0))
+            pygame.display.flip()
+            self.menu_state = d_screen
+            self.menu_handler()
+
+        if d_screen == 'new_game':
+            self.screen.fill(bgcolor)
+            self.screen.blit(self.new_game, (0, 0))
+            self.choice_player = pygame.Surface((80, 110))
+            self.choice_player.fill(bgcolor)
+            self.screen.blit(self.player_pick, (470, 337), PICK[int(self.data_player)])
+            pygame.display.flip()
+            self.menu_state = d_screen
+            self.menu_handler()
+
+        if d_screen == 'continue_game':
+            self.screen.fill(bgcolor)
+            self.screen.blit(self.continue_game, (0, 0))
+            pygame.display.flip()
+            self.menu_state = d_screen
+            self.menu_handler()
+
+    def menu_handler(self):
+        self.waiting = True
+        while self.waiting:
+            self.clock.tick(FPS)
             for event in pygame.event.get():
-                ## Kill the Window when User kills it
+                #Kill the Window
                 if event.type == pygame.QUIT:
-                    done = True
-                if menu_screen != -1:
-                    ## Mouse Events Handling in MENU
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if event.button == 1 :
-                            pos = event.pos
+                    self.waiting = False
+                    self.running = False
+                #handle mouse events in each menu screen
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1 :
+                        pos = event.pos
+                        #play
+                        if 428 < pos[0] < 596 and 225 < pos[1] < 286 and self.menu_state == 'menu':
+                            self.menu_display('play')
+                            self.waiting = False
 
-                            ## Play
-                            if 428 < pos[0] < 596 and 225 < pos[1] < 286 and menu_screen == 0:
-                                self.clear_menu()
-                                self._screen.blit(self._play, (0, 0))
-                                self.update_screen()
-                                menu_screen = 1
+                        #settings
+                        if 371 < pos[0] < 658 and 376 < pos[1] < 432 and self.menu_state == 'menu':
+                            print("SETTINGS")
 
-                            ## Play - New Game
-                            if 402 < pos[0] < 625 and 297 < pos[1] < 354 and menu_screen == 1:
-                                self.clear_menu()
-                                menu_screen = 12
-                                self._screen.blit(self._choose_player, (0, 0))
-                                p_position = 0
-                                self._screen.blit(self._player_pick, (470, 337), (p_position,0,80,110))
-                                self.update_screen()
+                        #quit
+                        if 437 < pos[0] < 585 and 542 < pos[1] < 591 and self.menu_state == 'menu':
+                            self.waiting = False
+                            self.running = False
 
-                            ## Choose Previous Player
-                            if 425 < pos[0] < 453 and 385 < pos[1] < 420 and menu_screen == 12 and p_position > 80:
-                                self.clear_menu()
-                                self._screen.blit(self._choose_player, (0, 0))
-                                p_position -= 81
-                                self._screen.blit(self._player_pick, (470, 337), (p_position,0,80,110))
-                                self.update_screen()
+                        #play - new Game
+                        if 402 < pos[0] < 625 and 297 < pos[1] < 354 and self.menu_state == 'play':
+                            self.menu_display('new_game')
+                            self.waiting = False
 
-                            ## Choose Next Player
-                            if 564 < pos[0] < 590 and 383 < pos[1] < 424 and menu_screen == 12 and p_position < 324:
-                                self.clear_menu()
-                                self._screen.blit(self._choose_player, (0, 0))
-                                p_position += 81
-                                self._screen.blit(self._player_pick, (470, 337), (p_position,0,80,110))
-                                self.update_screen()
+                        #choose previous player - new game
+                        if 425 < pos[0] < 453 and 385 < pos[1] < 420 and self.menu_state == 'new_game':
+                            if self.data_player >= 0:
+                                self.data_player -= 1
+                                if self.data_player == -1:
+                                    self.data_player = 4
+                                self.screen.blit(self.choice_player, (470, 337))
+                                pygame.display.flip()
+                                self.screen.blit(self.player_pick, (470, 337), PICK[self.data_player])
+                                pygame.display.flip()
 
-                            ## Play - Continue Game
-                            if 359 < pos[0] < 667 and 410 < pos[1] < 468 and menu_screen == 1:
-                                print("Continue Game")
+                        #choose next player - new game
+                        if 564 < pos[0] < 590 and 383 < pos[1] < 424 and self.menu_state == 'new_game':
 
-                            ## Settings
-                            if 371 < pos[0] < 658 and 376 < pos[1] < 432 and menu_screen == 0:
-                                print("SETTINGS")
-                                '''menu_screen = 2'''
+                            if self.data_player <= 4:
+                                self.data_player += 1
+                                if self.data_player == 5:
+                                    self.data_player = 0
+                                self.screen.blit(self.choice_player, (470, 337))
+                                pygame.display.flip()
+                                self.screen.blit(self.player_pick, (470, 337), PICK[self.data_player])
+                                pygame.display.flip()
 
-                            ## Quit
-                            if 437 < pos[0] < 585 and 542 < pos[1] < 591 and menu_screen == 0:
-                                done = True
+                        #start - new game
+                        if 458 < pos[0] < 576 and 484 < pos[1] < 542 and self.menu_state == 'new_game':
+                            self.create_new_game()
+                            self.waiting = False
 
-                    ## Keyboard Events Handling in MENU
-                    if event.type == pygame.KEYDOWN:
+                        #back to menu - new game
+                        if 356 < pos[0] < 674 and 568 < pos[1] < 622 and self.menu_state == 'new_game':
+                            self.menu_display('menu')
+                            self.waiting = False
 
-                        ##Return to Menu
-                        if event.key == pygame.K_ESCAPE :
-                            self.clear_menu()
-                            menu_screen = 0
-                            self._screen.blit(self._menu, (0, 0))
-                            self.update_screen()
+                        #continue game - play
+                        if 359 < pos[0] < 666 and 418 < pos[1] < 474 and self.menu_state == 'play':
+                            self.menu_display('continue_game')
+                            self.waiting = False
 
-                        ## Choose Previous Player with Keyboard
-                        if event.key == pygame.K_LEFT and menu_screen == 12 and p_position > 80:
-                            self.clear_menu()
-                            self._screen.blit(self._choose_player, (0, 0))
-                            p_position -= 81
-                            self._screen.blit(self._player_pick, (470, 337), (p_position,0,80,110))
-                            self.update_screen()
+                        #Username - continue game
+                        if 392 < pos[0] < 622 and 335 < pos[1] < 392 and self.menu_state == 'continue_game':
+                            self.load_game()
+                            self.waiting = False
 
-                        ## Choose Next Player with Keyboard
-                        if event.key == pygame.K_RIGHT and menu_screen == 12 and p_position < 324:
-                            self.clear_menu()
-                            self._screen.blit(self._choose_player, (0, 0))
-                            p_position += 81
-                            self._screen.blit(self._player_pick, (470, 337), (p_position,0,80,110))
-                            self.update_screen()
+                        #back to menu - continue game
+                        if 353 < pos[0] < 674 and 538 < pos[1] < 595 and self.menu_state == 'continue_game':
+                            self.menu_display('menu')
+                            self.waiting = False
 
-                        ## Set Selected Player
-                        if event.key == pygame.K_RETURN and menu_screen == 12:
-                            if p_position == 0:
-                                self._player_selected = "adventurer"
-                            if p_position == 81:
-                                self._player_selected = "female"
-                            if p_position == 162:
-                                self._player_selected = "male"
-                            if p_position == 243:
-                                self._player_selected = "soldier"
-                            if p_position == 324:
-                                self._player_selected = "zombie"
+                        #back to menu - play
+                        if 353 < pos[0] < 674 and 538 < pos[1] < 595 and self.menu_state == 'play':
+                            self.menu_display('menu')
+                            self.waiting = False
 
-                            ## Create New Game
-
-                            ##Initialize
-                            self._dir = "right"
-                            self._player_right = PlayerSprites(self._player_selected, "right")
-                            self._player_left = PlayerSprites(self._player_selected, "left")
-
-                            ## Print New Game (Level 1 + Selected Player)
-                            self._start_file = "resources/levels/1.lvl"
-                            self._start_level = self._level_loader.load(self._start_file)
-
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("stand")
-                            self._player_pos = 0, 0
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-                            ## Switch to GAME mod
-                            menu_screen = -1
-
-                if menu_screen == -1:
-                    ## Jump Handler
-                    def jump(level, player, start_pos, direct):
-                        self._player_direct = PlayerSprites(player, direct)
-                        max_pos = start_pos[1] - 144
-                        done = False
-                        jump_status = 0
-                        while done == False:
-
-                            if jump_status == 0:
-                                if start_pos[1] != max_pos:
-                                    self._player = self._player_direct.get_selected_player()
-                                    self._player_act = self._player_direct.get_act("jump")
-                                    self._player_pos = (self._player_pos[0], self._player_pos[1] - 8)
-
-                                    self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                                    self.update_screen()
-
-                            if self._player_pos[1] == max_pos:
-                                jump_status = 1
-
-                            if jump_status == 1:
-                                self._player = self._player_direct.get_selected_player()
-                                self._player_act = self._player_direct.get_act("jump")
-                                self._player_pos = (self._player_pos[0], self._player_pos[1] + 8)
-
-                                self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                                self.update_screen()
-
-                                if self._player_pos[1] == start_pos[1]:
-                                    self._player_act = self._player_direct.get_act("stand")
-                                    self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                                    self.update_screen()
-                                    jump_status = 2
-                                    done = True
-
-
-                    ## Keyboard Down Events Handling in GAME
-                    if event.type == pygame.KEYDOWN:
-
-                        ## Return to Menu
-                        if event.key == pygame.K_ESCAPE :
-                            self.clear_menu()
-                            menu_screen = 0
-                            self._screen.blit(self._menu, (0, 0))
-                            self.update_screen()
-                            menu_screen = 0
-
-                        ## Jump
-                        elif event.key == pygame.K_SPACE:
-                            jump(self._start_level, self._player_selected, self._player_pos, self._dir)
-
-
-                        ## Move Right in Game
-                        if event.key == pygame.K_RIGHT:
-                            self._dir = "right"
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("walk")
-                            self._player_pos = (self._player_pos[0] + 10, self._player_pos[1])
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        ## Move Left in Game
-                        if event.key == pygame.K_LEFT:
-                            self._dir = "left"
-                            self._player = self._player_left.get_selected_player()
-                            self._player_act = self._player_left.get_act("walk")
-                            self._player_pos = (self._player_pos[0] - 10, self._player_pos[1])
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        ## Turn Back in Game
-                        if event.key == pygame.K_UP:
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("back")
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        ## Test
-                        if event.key == pygame.K_t:
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("swim")
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        ## Duck
-                        if event.key == pygame.K_DOWN:
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("duck")
-                            self._player_pos = (self._player_pos[0], self._player_pos[1] + 10)
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        '''## Jump 2Case
-                        elif keys[pygame.K_SPACE]:
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("jump")
-                            self._player_pos = (self._player_pos[0], self._player_pos[1] - 256)
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()'''
-
-                    ## Keyboard Up Events Handling in GAME
-                    elif event.type == pygame.KEYUP:
-                        if event.key == pygame.K_RIGHT:
-                            self._player_act = self._player_right.get_act("stand")
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        elif event.key == pygame.K_LEFT:
-                            self._player_act = self._player_left.get_act("stand")
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        elif event.key == pygame.K_UP:
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("stand")
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        if event.key == pygame.K_t:
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("stand")
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-                        ## Jump
-                        #elif event.key == pygame.K_SPACE:
-                            #jump(self._start_level, self._player_selected, self._player_pos, self._dir)
-
-                        elif event.key == pygame.K_DOWN:
-                            self._player = self._player_right.get_selected_player()
-                            self._player_act = self._player_right.get_act("stand")
-
-                            self._screen.blit(self._run.level(self._start_level, self._player, self._player_act, self._player_pos), (0, 0))
-                            self.update_screen()
-
-
-            ## Update screen
-            self.update_screen()
-            self._clock.tick(FPS)
-
-        pygame.quit()
-
+    def gameover_screen(self):
+        # game over/continue
+        pass
 
 if __name__ == '__main__':
     launch = UntitledGame()
-    launch.handler()
+    launch.menu_display('menu')
+    while launch.running:
+        launch.game()
+        launch.gameover_screen()
+
+pygame.quit()
