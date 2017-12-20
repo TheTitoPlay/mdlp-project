@@ -17,8 +17,7 @@ class DynamicSprite(Sprite):
     def switch(self, sprite_type_switch):
         self.image = self.game_sprites.get_image_sprite(self.sheet, self.game_sprites.get_resources(sprite_type_switch))
 
-class Hud():
-    def create(self, image, hud_type):
-        self.hud_surface = image.get_rect()
-        
-
+class Key():
+    def __init__(self, image):
+        self.game_sprites = GameSprites()
+        self.key_yellow = self.game_sprites.get_image_sprite(image, self.game_sprites.get_resources('hudKey_yellow_empty'))       

@@ -12,17 +12,29 @@ from game_sprites import *
 class Level:
     def __init__(self, file):
         ## Read level given file and put it in a list
-        F = open(file, 'r')
-        self.level = []
-        for line in F:
-            self.level.append(list(line))
-        F.close()
-
         if file == 'resources/levels/1.lvl':
             self.env_type = 'grass'
 
         if file == 'resources/levels/2.lvl':
             self.env_type = 'dirt'
+
+        if file == 'resources/levels/3.lvl':
+            self.env_type = 'planet'
+
+        if file == 'resources/levels/4.lvl':
+            self.env_type = 'sand'
+
+        if file == 'resources/levels/5.lvl':
+            self.env_type = 'snow'
+
+        if file == 'resources/levels/6.lvl':
+            self.env_type = 'stone'
+
+        F = open(file, 'r')
+        self.level = []
+        for line in F:
+            self.level.append(list(line))
+        F.close()
 
         self.generate_level()
 
@@ -57,6 +69,12 @@ class Level:
 
                 if case == "k":
                     self.env_maker('keyYellow', X_case, Y_case)
+
+                if case == "s":
+                    self.env_maker('signLeft', X_case, Y_case)
+
+                if case == "S":
+                    self.env_maker('signRight', X_case, Y_case)
 
                 X_case += BS
             Y_case += BS

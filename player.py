@@ -16,6 +16,7 @@ class Player(pygame.sprite.Sprite):
         self.walking = False
         self.jumping = False
         self.falling = False
+        self.backing = False
         self.current_frame = 0
         self.last_update = 0
         self.load_sprites()
@@ -44,6 +45,8 @@ class Player(pygame.sprite.Sprite):
         self.fall = self.game.tilesheet.get_image(160,0,80,110)
         self.fall_l = pygame.transform.flip(self.fall, True, False)
 
+        self.back = self.game.tilesheet.get_image(320,220,80,110)
+
     def jump_break(self):
         if self.jumping:
             if self.vel.y < -5:
@@ -63,10 +66,10 @@ class Player(pygame.sprite.Sprite):
         self.acc = vec(0, GRAVITY)
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] and not self.backing:
             self.acc.x = SPEED
 
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] and not self.backing:
             self.acc.x = -SPEED
 
         self.acc.x += self.vel.x * FRICTION
@@ -123,7 +126,10 @@ class Player(pygame.sprite.Sprite):
             if self.vel.x < 0:
                 self.image = self.fall_l
 
-        if not self.jumping and not self.walking and not self.falling:
+        if self.backing:
+            self.image = self.back
+
+        if not self.jumping and not self.walking and not self.falling and not self.backing:
 
             if now - self.last_update > 350:
                 self.last_update = now

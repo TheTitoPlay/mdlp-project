@@ -6,9 +6,9 @@ FPS = 60
 
 #player
 FRICTION = -0.1
-SPEED = 0.5
+SPEED = 0.7
 GRAVITY = 0.5
-JUMP = 18
+JUMP = 19
 
 #platforms sprite size
 BS = 128
