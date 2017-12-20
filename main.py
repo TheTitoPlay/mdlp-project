@@ -126,7 +126,7 @@ class UntitledGame:
                 if 'sign' in keys:
                     s = Sprite(self.game_sprites, keys, sprite)
                     self.all_sprites.add(s)
-                if 'door' in keys:
+                elif 'door' in keys:
                     self.door = DynamicSprite(self.game_sprites, keys, sprite)
                     self.all_sprites.add(self.door)
                 elif 'key' in keys:
@@ -242,8 +242,8 @@ class UntitledGame:
         self.screen.blit(self.player.image, self.player.rect)
         # Display HUD
         self.screen.blit(self.hud_head, (20,20))
-        self.screen.blit(self.key_hud_empty, (80,-10))
-        self.screen.blit(self.key_hud, (80,-10))
+        self.screen.blit(self.key_hud_empty, (70,-15))
+        self.screen.blit(self.key_hud, (70,-15))
         #flip the display
         pygame.display.flip()
 
