@@ -97,7 +97,7 @@ class UntitledGame:
         self.level_loaded = str(int(self.level_loaded) + 1)
         with open("resources/saves/" + self.saved_name + ".svg", 'w') as f:
             #        line 1                                     line 2
-            f.write("player" + '\n' + str(self.data_player) + 'level\n' + self.level_loaded)
+            f.write("player" + '\n' + str(self.data_player) + '\nlevel\n' + self.level_loaded)
             self.level2load = 'resources/levels/' + self.level_loaded + '.lvl'
 
     def game(self):
