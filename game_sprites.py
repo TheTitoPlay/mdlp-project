@@ -9,10 +9,6 @@ import pygame
 from settings import *
 
 class GameSprites:
-    '''def __init__(self):
-        pass
-        #self._game_sprites = pygame.image.load('resources/game_sprites/Spritesheets/spritesheet_complete.png').convert_alpha()'''
-
     def get_image_sprite(self, image, rect):
         image_s = pygame.Surface((rect[2], rect[3]), pygame.SRCALPHA, 32)
         image_s.blit(image, (0, 0), rect)
