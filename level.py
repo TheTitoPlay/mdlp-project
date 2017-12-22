@@ -11,7 +11,7 @@ from game_sprites import *
 
 class Level:
     def __init__(self, file):
-        ## Read level given file and put it in a list
+        ## Assign an env_type to each level
         if file == 'resources/levels/1.lvl':
             self.env_type = 'grass'
 
@@ -29,7 +29,7 @@ class Level:
 
         if file == 'resources/levels/6.lvl':
             self.env_type = 'stone'
-
+        ## Read level given file and put it in a list
         F = open(file, 'r')
         self.level = []
         for line in F:
